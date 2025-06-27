@@ -25,7 +25,12 @@
 #include "totp.h"
 #include "hotp.h"
 
-time_t get_time(time_t T0) { return (time(NULL) - T0) / TIME_STEP; }
+time_t get_time(void) { return time(NULL); }
+
+time_t calculate_time(time_t current, time_t offset)
+{
+    return (current - offset) / TIME_STEP;
+}
 
 uint32_t totp(const uint8_t *key, const size_t key_len, uint64_t counter,
               uint32_t digits)
