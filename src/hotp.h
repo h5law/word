@@ -24,22 +24,17 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#ifndef HS_LEN
-#define HS_LEN 20 /* 20 bytes - 160 bits */
-#endif            /* #ifndef HS_LEN */
+uint32_t hotp(const uint8_t *key, const size_t key_len, uint64_t counter,
+              uint32_t digits);
 
-#ifndef DIGITS
-#define DIGITS 6  /* 6 decimal digits determined by HOTP */
-#endif            /* #ifndef DIGITS */
+uint8_t *hmac_sha1(const uint8_t *key, const size_t key_len,
+                   uint64_t counter);
 
-uint32_t hotp(uint8_t hmac[HS_LEN]);
+uint32_t truncate(uint8_t *digest, uint32_t digits);
 
-void hmac_sha1(const uint8_t *key, const size_t key_len, const uint8_t *data,
-               const size_t data_len, uint8_t hash[HS_LEN],
-               unsigned int *hash_len);
-
-uint8_t *reverse_str(const uint8_t *data, uint8_t *rev, size_t data_len);
 uint64_t reverse_64(uint64_t word);
+
+uint8_t *reverse_str(uint8_t *data, size_t data_len);
 
 #endif /* #ifndef _HOTP_H */
 

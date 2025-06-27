@@ -21,17 +21,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "totp.h"
+#include "../src/totp.h"
 
 int main(int argc, char **argv)
 {
-    const char    *secret          = "JKGHAFSDCASLJKFG";
-    const uint32_t time_step       = TIME_STEP;
-    const uint64_t initial_counter = T0;
+    const char *secret =
+            "KQYVPKB7TY7EIAGIQAAY7IY7YRKPXV3F2C6KPZVF6N5SRKQVCZLU2QJ2FPNJRFUH"
+            "JU52BI3KQKDGVGU5QQG6YLAUYDL3BFYXSZKJUZI";
 
     uint32_t code;
-    code = totp(( const uint8_t * )secret, strlen(secret) - 1, time_step,
-                initial_counter);
+
+    code = totp(( const uint8_t * )secret, strlen(secret), get_time(0), 6);
 
     printf("OTP Key:  \t%s\nOTP Code: \t%06d\n", secret, code);
 

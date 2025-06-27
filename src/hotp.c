@@ -100,19 +100,21 @@ static const uint64_t pow[10] = {1,          10,         100,      1000,
                                  10000,      1000000,    10000000, 100000000,
                                  1000000000, 10000000000};
 
-uint8_t *reverse_str(const uint8_t *data, uint8_t *rev, size_t data_len)
+uint8_t *reverse_str(uint8_t *data, size_t data_len)
 {
-    int left = 0, right = data_len - 1;
+    int     left = 0, right = data_len - 1;
+    uint8_t byte;
     while (left < right) {
-        rev[right] = (data[left] & 0xF0) | (data[left] & 0x0F);
-        rev[left]  = (data[right] & 0xF0) | (data[right] & 0x0F);
+        byte        = (data[left] & 0xF0) | (data[left] & 0x0F);
+        data[left]  = (data[right] & 0xF0) | (data[right] & 0x0F);
+        data[right] = byte;
         ++left;
         --right;
     }
     if ((data_len & 1) > 0)
-        rev[data_len / 2] =
+        data[data_len / 2] =
                 (data[data_len / 2] & 0xF0) | (data[data_len / 2] & 0x0F);
-    return rev;
+    return data;
 }
 
 uint64_t reverse_64(uint64_t word)
@@ -126,27 +128,44 @@ uint64_t reverse_64(uint64_t word)
     return word;
 }
 
-/* KEY: Arbitrarily sized secret key generated for OTP generation
- * DATA/COUNTER: a 64-bit/8-byte (uint64_t) UNIX timestamp
- * HASH: The resulting 160-bit (20-byte) HMAC SHA-1 result
- */
-void hmac_sha1(const uint8_t *key, const size_t key_len, const uint8_t *data,
-               const size_t data_len, uint8_t *hash, unsigned int *hash_len)
+uint8_t *hmac_sha1(const uint8_t *key, const size_t key_len, uint64_t counter)
 {
-    uint8_t rev[key_len];
-    reverse_str(key, rev, key_len);
-    reverse_64(( uint64_t )(data));
-    HMAC(( const EVP_MD * )EVP_sha1(), rev, key_len, ( unsigned char * )&data,
-         sizeof(uint64_t), hash, hash_len);
+    return HMAC(( const EVP_MD * )EVP_sha1(), key, key_len,
+                ( const unsigned char * )&counter, sizeof(counter), NULL, 0);
 }
 
-uint32_t hotp(uint8_t hash[HS_LEN])
+uint32_t truncate(uint8_t *digest, uint32_t digits)
 {
-    int offset   = hash[HS_LEN - 1] & 0xF;
-    int bin_code = (hash[offset] & 0x7F) << 24 |
-                   (hash[offset + 1] & 0xFF) << 16 |
-                   (hash[offset + 2] & 0xFF) << 8 | (hash[offset + 3] & 0xFF);
-    return ( uint32_t )bin_code % ( uint32_t )pow[DIGITS - 1];
+    uint64_t offset;
+    uint32_t bin_code;
+
+    offset = digest[19] & 0xF;
+
+    /* clang-format off */
+    bin_code = (digest[offset]     & 0x7F) << 24 |
+               (digest[offset + 1] & 0xFF) << 16 |
+               (digest[offset + 2] & 0xFF) << 8  |
+               (digest[offset + 3] & 0xFF);
+    /* clang-format on */
+
+    return bin_code % pow[digits - 1];
+}
+
+uint32_t hotp(const uint8_t *key, const size_t key_len, uint64_t counter,
+              uint32_t digits)
+{
+    uint8_t *digest;
+    uint32_t code;
+    uint32_t endian;
+
+    endian = 0xDEADBEEF;
+    if ((*( const uint8_t * )&endian) == 0xEF) {
+        counter = reverse_64(counter);
+    }
+    digest = hmac_sha1(key, key_len, counter);
+    code   = truncate(digest, digits);
+
+    return code;
 }
 
 // vim: ft=c ts=4 sts=4 sw=4 et ai cin

@@ -25,15 +25,13 @@
 #include <sys/types.h>
 
 #ifndef TIME_STEP
-#define TIME_STEP 30
+#define TIME_STEP (( uint32_t )30)
 #endif /* #ifndef TIME_STEP */
 
-#ifndef T0
-#define T0 0
-#endif /* #ifndef T0 */
+time_t get_time(time_t T0);
 
-uint32_t totp(const uint8_t *key, const size_t key_len, uint32_t step,
-              uint64_t counter);
+uint32_t totp(const uint8_t *key, const size_t key_len, uint64_t counter,
+              uint32_t digits);
 
 #endif /* #ifndef _TOTP_H */
 

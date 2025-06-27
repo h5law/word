@@ -21,20 +21,16 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <time.h>
-#include <stdio.h>
-#include <stdlib.h>
 
+#include "totp.h"
 #include "hotp.h"
 
-uint32_t totp(const uint8_t *key, const size_t key_len, uint32_t step,
-              uint64_t counter)
+time_t get_time(time_t T0) { return (time(NULL) - T0) / TIME_STEP; }
+
+uint32_t totp(const uint8_t *key, const size_t key_len, uint64_t counter,
+              uint32_t digits)
 {
-    uint64_t     T            = (time(NULL) - counter) / step;
-    unsigned int hash_len     = HS_LEN;
-    uint8_t      hash[HS_LEN] = {0};
-    hmac_sha1(key, key_len, ( const uint8_t * )T, sizeof(uint64_t),
-              ( uint8_t * )hash, &hash_len);
-    uint32_t code = hotp(hash);
+    uint32_t code = hotp(key, key_len, counter, digits);
     return code;
 }
 

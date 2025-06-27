@@ -1,26 +1,32 @@
-CC=clang
+CC = clang
 
-CFLAGS=$(shell pkg-config --cflags openssl)
-CFLAGS=$(shell pkg-config --libs openssl)
+CFLAGS = $(shell pkg-config --cflags openssl) -Isrc/
+CFLAGS = $(shell pkg-config --libs openssl)
 
-SOURCES=hotp.c totp.c
-TESTS=otp_test.c
+SRC_DIR = src
+TEST_DIR = tests
 
-OBJECTS=hotp.o totp.o
-TEST_OBJECTS=otp_test.o
+SOURCES = $(wildcard $(SRC_DIR)/*.c)
+OBJECTS = $(SOURCES:.c=.o)
+
+TEST_SOURCES = $(wildcard $(TEST_DIR)/*.c)
+TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
 
 .PHONY: clean build test demo
 
 clean:
-	rm -vf $(OBJECTS) $(TEST_OBJECTS) test
+	rm -vf $(OBJECTS)
+	rm -vf $(TEST_OBJECTS)
 
-%.o: %.c
+$(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-build: $(OBJECTS)
+$(TEST_DIR)/test_hotp.o:
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TEST_DIR)/test_hotp $(TEST_DIR)/test_hotp.c $(SRC_DIR)/hotp.c $(SRC_DIR)/totp.c
 
-test: $(SOURCES) $(TESTS)
-	# $(LD) $(LDFLAGS) -o test $(TEST_OBJECTS) $(OBJECTS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o test $(TESTS) $(SOURCES)
-	./test
+$(TEST_DIR)/test_totp.o:
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TEST_DIR)/test_totp $(TEST_DIR)/test_totp.c $(SRC_DIR)/hotp.c $(SRC_DIR)/totp.c
 
+test: $(TEST_OBJECTS)
+	exec $(TEST_DIR)/test_hotp
+	exec $(TEST_DIR)/test_totp
