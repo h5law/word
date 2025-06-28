@@ -1,1 +1,3 @@
-test
+src/*.o
+tests/*.o
+.ccls-cache/*/**

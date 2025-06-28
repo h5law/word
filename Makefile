@@ -21,6 +21,9 @@ clean:
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+build: $(OBJECTS)
+	$(CC) $(CFLAGS) -o $(SRC_DIR)/words $(OBJECTS)
+
 $(TEST_DIR)/test_hotp.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TEST_DIR)/test_hotp $(TEST_DIR)/test_hotp.c $(SRC_DIR)/hotp.c $(SRC_DIR)/totp.c
 
