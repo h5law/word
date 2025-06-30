@@ -1,7 +1,13 @@
 CC = clang
 
-CFLAGS = $(shell pkg-config --cflags openssl) -Isrc/
-CFLAGS = $(shell pkg-config --libs openssl)
+CFLAGS  = -Isrc/ \
+ $(shell pkg-config --cflags openssl) \
+ $(pkg-config --cflags limbo_sqlite3) \
+ $(dialog-config --cflags)
+
+LDFLAGS  = $(shell pkg-config --libs openssl) \
+ $(pkg-config --libs limbo_sqlite3) \
+ $(dialog-config --libs)
 
 SRC_DIR = src
 TEST_DIR = tests

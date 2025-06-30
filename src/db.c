@@ -1,4 +1,4 @@
-/* defs.h
+/* db.c
  * Copyright (c) 2025 - h5law <dev@h5law.com>
  *
  * This software is provided 'as-is', without any express or implied
@@ -18,34 +18,14 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#ifndef _DEFS_H
-#define _DEFS_H
+#include <limbo_sqlite3/sqlite3.h>
 
-#include <sys/types.h>
+const char *create_tbl_sql = "CREATE TABLE WORDS_TBL("
+                             "ID INT PRIMARY        KEY      NOT NULL,"
+                             "DESCRIPTOR            TEXT     NOT NULL,"
+                             "USERNAME              TEXT     ,"
+                             "PASSWORD              TEXT     ,"
+                             "OTP_SECRET            TEXT     ,"
+                             "NOTES                 TEXT     );";
 
-#ifndef PROGNAME
-#define PROGNAME "words"
-#endif /* #ifndef PROGNAME */
-
-#ifndef MAX_KEY_SIZE
-#define MAX_KEY_SIZE 512
-#endif /* #ifndef MAX_KEY_SIZE */
-
-#ifndef MAX_VALUE_SIZE
-#define MAX_VALUE_SIZE 4096
-#endif /* #ifndef MAX_VALUE_SIZE */
-
-typedef struct key_value_t {
-    char key[MAX_KEY_SIZE];
-    char value[MAX_VALUE_SIZE];
-} key_value_t;
-
-typedef struct store_entry_t {
-    char         descriptor[MAX_KEY_SIZE];
-    key_value_t *entries;
-    size_t       count;
-} store_entry_t;
-
-#endif /* #ifndef _DEFS_H */
-
-// vim: ft=c ts=4 sts4 sw=4 et ai cin
+// vim: ft=c ts=4 sts=4 sw=4 et ai cin

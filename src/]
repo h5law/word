@@ -1,4 +1,4 @@
-/* defs.h
+/* db.h
  * Copyright (c) 2025 - h5law <dev@h5law.com>
  *
  * This software is provided 'as-is', without any express or implied
@@ -18,34 +18,31 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
-#ifndef _DEFS_H
-#define _DEFS_H
+#ifndef _DB_H
+#define _DB_H
 
-#include <sys/types.h>
+#include <limbo_sqlite3/sqlite3.h>
 
-#ifndef PROGNAME
-#define PROGNAME "words"
-#endif /* #ifndef PROGNAME */
+#define MAX_STR_LEN 512
 
-#ifndef MAX_KEY_SIZE
-#define MAX_KEY_SIZE 512
-#endif /* #ifndef MAX_KEY_SIZE */
+typedef struct table_entry_t {
+    const char descriptor[MAX_STR_LEN];
+    const char password[
+sqlite3
+} table_entry_t;
 
-#ifndef MAX_VALUE_SIZE
-#define MAX_VALUE_SIZE 4096
-#endif /* #ifndef MAX_VALUE_SIZE */
+int db_init_database(sqlite3 *db, const char *path, int flags);
 
-typedef struct key_value_t {
-    char key[MAX_KEY_SIZE];
-    char value[MAX_VALUE_SIZE];
-} key_value_t;
+int db_create_table(sqlite3 *db, const char *table_name, const char *schema);
 
-typedef struct store_entry_t {
-    char         descriptor[MAX_KEY_SIZE];
-    key_value_t *entries;
-    size_t       count;
-} store_entry_t;
+int db_drop_table(sqlite3 *db, const char *table_name);
 
-#endif /* #ifndef _DEFS_H */
+int db_insert_entry(sqlite3 *db, const char *descriptor, const char *username,
+                    const char *password, const char *otp_secret,
+                    const char *notes[]);
 
-// vim: ft=c ts=4 sts4 sw=4 et ai cin
+int db_remove_entry(sqlite3 *db, const char *descriptor);
+
+#endif /* #ifndef _DB_H */
+
+// vim: ft=c ts=4 sts=4 sw=4 et ai cin
