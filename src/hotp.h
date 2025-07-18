@@ -27,15 +27,6 @@
 uint32_t hotp(const uint8_t *key, const size_t key_len, uint64_t counter,
               uint32_t digits);
 
-uint8_t *hmac_sha1(const uint8_t *key, const size_t key_len,
-                   uint64_t counter);
-
-uint32_t truncate(uint8_t *digest, uint32_t digits);
-
-uint64_t reverse_64(uint64_t word);
-
-uint8_t *reverse_str(uint8_t *data, size_t data_len);
-
 #endif /* #ifndef _HOTP_H */
 
 // vim: ft=c ts=4 sts=4 sw=4 et ai cin

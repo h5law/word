@@ -88,6 +88,8 @@
  * digit HOTP value 872921 decimal.
  */
 
+#include <assert.h>
+#include <byteswap.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -100,38 +102,10 @@ static const uint64_t pow[10] = {1,          10,         100,      1000,
                                  10000,      1000000,    10000000, 100000000,
                                  1000000000, 10000000000};
 
-uint8_t *reverse_str(uint8_t *data, size_t data_len)
-{
-    int     left = 0, right = data_len - 1;
-    uint8_t byte;
-    while (left < right) {
-        byte        = (data[left] & 0xF0) | (data[left] & 0x0F);
-        data[left]  = (data[right] & 0xF0) | (data[right] & 0x0F);
-        data[right] = byte;
-        ++left;
-        --right;
-    }
-    if ((data_len & 1) > 0)
-        data[data_len / 2] =
-                (data[data_len / 2] & 0xF0) | (data[data_len / 2] & 0x0F);
-    return data;
-}
-
-uint64_t reverse_64(uint64_t word)
-{
-    word = ((word & 0x00000000FFFFFFFF) << 32) |
-           ((word & 0xFFFFFFFF00000000) >> 32);
-    word = ((word & 0x0000FFFF0000FFFF) << 16) |
-           ((word & 0xFFFF0000FFFF0000) >> 16);
-    word = ((word & 0x00FF00FF00FF00FF) << 8) |
-           ((word & 0xFF00FF00FF00FF00) >> 8);
-    return word;
-}
-
 uint8_t *hmac_sha1(const uint8_t *key, const size_t key_len, uint64_t counter)
 {
     return HMAC(( const EVP_MD * )EVP_sha1(), key, key_len,
-                ( const unsigned char * )&counter, sizeof(counter), NULL, 0);
+                ( uint8_t * )&counter, 8, NULL, NULL);
 }
 
 uint32_t truncate(uint8_t *digest, uint32_t digits)
@@ -139,7 +113,7 @@ uint32_t truncate(uint8_t *digest, uint32_t digits)
     uint64_t offset;
     uint32_t bin_code;
 
-    offset = digest[19] & 0xF;
+    offset = digest[19] & 0x0F;
 
     /* clang-format off */
     bin_code = (digest[offset]     & 0x7F) << 24 |
@@ -151,17 +125,17 @@ uint32_t truncate(uint8_t *digest, uint32_t digits)
     return bin_code % pow[digits - 1];
 }
 
-uint32_t hotp(const uint8_t *key, const size_t key_len, uint64_t counter,
+uint32_t hotp(const uint8_t *key, size_t key_len, uint64_t counter,
               uint32_t digits)
 {
     uint8_t *digest;
     uint32_t code;
     uint32_t endian;
 
-    endian = 0xDEADBEEF;
-    if ((*( const uint8_t * )&endian) == 0xEF) {
-        counter = reverse_64(counter);
-    }
+    volatile uint32_t i = 0x01234567;
+    if ((*(( uint8_t * )(&i))) == 0x67)
+        counter = bswap_64(counter);
+
     digest = hmac_sha1(key, key_len, counter);
     code   = truncate(digest, digits);
 
