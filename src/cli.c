@@ -24,8 +24,10 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "base32.h"
 #include "totp.h"
 #include "defs.h"
+#include "ui.h"
 
 void print_usage(void)
 {
@@ -36,25 +38,28 @@ void print_usage(void)
             "      \t  -o <uint64_t> (offset to start counting from)\n");
     fprintf(stderr,
             "      \t  -t <uint32_t> (time period each TOTP is valid for)\n");
+    fprintf(stderr, "      \t  -b (base32 encoded secret)\n");
     fprintf(stderr, "    \n\tCOMMANDS:\n");
     fprintf(stderr, "      \t  generate (produce a TOTP)\n");
 }
 
 int main(int argc, char **argv)
 {
-    int      opt         = 0;
-    char     secret[256] = {0};
-    uint64_t offset      = 0;
-    size_t   len         = 0;
+    int      opt          = 0;
+    char     secret[1024] = {0};
+    uint64_t offset       = 0;
+    uint64_t step         = 30;
+    size_t   len          = 0;
 
-    int sfound           = 0;
+    int      sfound       = 0;
+    int      base32_key   = 0;
+    uint8_t *key          = NULL;
+    size_t   key_len      = 0;
 
-    while ((opt = getopt(argc, argv, "s:o:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "s:o:t:b")) != -1) {
         switch (opt) {
         case 's':
             len = strlen(optarg);
-            if (len > 256)
-                len = 256;
             memmove(secret, optarg, len);
             ++sfound;
             break;
@@ -62,8 +67,10 @@ int main(int argc, char **argv)
             offset = atoll(optarg);
             break;
         case 't':
-#undef TIME_STEP
-#define TIME_STEP atoi(optarg)
+            step = atoll(optarg);
+            break;
+        case 'b':
+            base32_key = 1;
             break;
         default:
             print_usage();
@@ -75,17 +82,34 @@ int main(int argc, char **argv)
         exit(1);
     }
 
+    if (base32_key) {
+        if (base32_decode(( char ** )&key, &key_len, secret, len) == -1) {
+            free(key);
+            return -1;
+        }
+    } else {
+        key     = ( uint8_t * )secret;
+        key_len = len;
+    }
+
+    draw_ui();
+
     if (strncmp("generate", argv[optind], 8) == 0) {
         uint32_t otp;
-        otp = totp(( const uint8_t * )secret, len,
-                   calculate_time(get_time(), offset), 6);
+        otp = totp(key, len, calculate_time(get_time(), offset), 6);
 
         printf("OTP: \t%06d\n", otp);
-    } else {
-        fprintf(stderr, "Unknown command\n");
-        print_usage();
-        exit(1);
+        if (base32_key)
+            free(key);
+
+        exit(0);
     }
+
+    if (base32_key)
+        free(key);
+    fprintf(stderr, "Unknown command\n");
+    print_usage();
+    exit(1);
 
     exit(0);
 }
