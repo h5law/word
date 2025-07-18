@@ -3,12 +3,12 @@ CC = gcc
 CFLAGS  := -Isrc/ \
 		   $(shell pkg-config --cflags openssl) \
 		   $(shell pkg-config --cflags limbo_sqlite3) \
-		   $(shell pkg-config --cflags ncurses)
+		   -DTB_IMPL -DTB_LIB_OPTS
+		   # $(shell pkg-config --cflags nac) \
 
 LDFLAGS := $(shell pkg-config --libs openssl) \
 		   $(shell pkg-config --libs limbo_sqlite3) \
-		   $(shell pkg-config --libs ncurses) \
-		   $(shell pkg-config --libs form)
+		   # $(shell pkg-config --libs ncurses) \
 
 SRC_DIR = src
 TEST_DIR = tests
@@ -22,12 +22,13 @@ TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
 .PHONY: clean build test demo
 
 clean:
-	rm -vf $(OBJECTS)
+	rm -vf $(OBJECTS) *.o */*.o */**/*.o
+	rm -vf $(OBJECTS:.o=.d) *.d */*.d */**/*.d
 	rm -vf $(TEST_OBJECTS)
 	rm -vf words
 
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) -MD $(CFLAGS) -c -o $@ $<
 
 build: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o words $(OBJECTS)
