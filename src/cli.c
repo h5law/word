@@ -23,11 +23,16 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+
+#include <pwd.h>
 
 #include "base32.h"
 #include "totp.h"
 #include "defs.h"
 #include "ui.h"
+
+extern char *db_path;
 
 void print_usage(void)
 {
@@ -39,7 +44,10 @@ void print_usage(void)
     fprintf(stderr,
             "      \t  -t <uint32_t> (time period each TOTP is valid for)\n");
     fprintf(stderr, "      \t  -b (base32 encoded secret)\n");
+    fprintf(stderr, "      \t  -d (database file path)\n");
+    fprintf(stderr, "      \t  -h (show this help)\n");
     fprintf(stderr, "    \n\tCOMMANDS:\n");
+    fprintf(stderr, "      \t  help (show help)\n");
     fprintf(stderr, "      \t  generate (produce a TOTP)\n");
 }
 
@@ -50,18 +58,20 @@ int main(int argc, char **argv)
     uint64_t offset       = 0;
     uint64_t step         = 30;
     size_t   len          = 0;
+    int      ret          = 0;
 
     int      sfound       = 0;
     int      base32_key   = 0;
     uint8_t *key          = NULL;
     size_t   key_len      = 0;
 
-    while ((opt = getopt(argc, argv, "s:o:t:b")) != -1) {
+    struct passwd *pw     = NULL;
+
+    while ((opt = getopt(argc, argv, "s:o:t:bd:")) != -1) {
         switch (opt) {
         case 's':
             len = strlen(optarg);
             memmove(secret, optarg, len);
-            ++sfound;
             break;
         case 'o':
             offset = atoll(optarg);
@@ -72,29 +82,31 @@ int main(int argc, char **argv)
         case 'b':
             base32_key = 1;
             break;
+        case 'd':
+            len = strlen(optarg);
+            memmove(db_path, optarg, len);
+            break;
         default:
             print_usage();
             exit(1);
         }
     }
-    if (sfound == 0 || optind >= argc) {
-        print_usage();
-        exit(1);
-    }
 
-    if (base32_key) {
-        if (base32_decode(( char ** )&key, &key_len, secret, len) == -1) {
-            free(key);
-            return -1;
-        }
-    } else {
-        key     = ( uint8_t * )secret;
-        key_len = len;
+    if (optind >= argc) {
+        goto ui;
     }
-
-    draw_ui();
 
     if (strncmp("generate", argv[optind], 8) == 0) {
+        if (base32_key) {
+            if (base32_decode(( char ** )&key, &key_len, secret, len) == -1) {
+                free(key);
+                return -1;
+            }
+        } else {
+            key     = ( uint8_t * )secret;
+            key_len = len;
+        }
+
         uint32_t otp;
         otp = totp(key, len, calculate_time(get_time(), offset), 6);
 
@@ -102,16 +114,24 @@ int main(int argc, char **argv)
         if (base32_key)
             free(key);
 
-        exit(0);
+        goto cleanup;
+    } else if (strncmp("help", argv[optind], 8) == 0) {
+        print_usage();
+        goto cleanup;
     }
 
-    if (base32_key)
-        free(key);
-    fprintf(stderr, "Unknown command\n");
-    print_usage();
-    exit(1);
+ui:
+    pw             = getpwuid(getuid());
+    char buf[1024] = {0};
+    snprintf(buf, 1024, "%s/.words/db.sqlite3", pw->pw_dir);
+    db_path = ( char * )malloc(strlen(buf));
+    memcpy(db_path, buf, strlen(buf));
 
-    exit(0);
+    draw_ui();
+
+cleanup:
+    free(db_path);
+    exit(ret);
 }
 
 // vim: ft=c ts=4 sts=4 sw=4 et ai cin

@@ -18,6 +18,11 @@
  * 3. This notice may not be removed or altered from any source distribution.
  */
 
+#ifndef UI_H
+#define UI_H
+
 int draw_ui(void);
+
+#endif /* UI_H */
 
 // vim: ft=c ts=4 sts=4 sw=4 et ai cin

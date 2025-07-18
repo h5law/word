@@ -28,12 +28,18 @@
 #define MAX_STR_LEN 512
 
 typedef struct table_entry_t {
-    char   descriptor[MAX_STR_LEN];
-    char   username[MAX_STR_LEN];
-    char   password[MAX_STR_LEN];
-    char   opt_secret[MAX_STR_LEN];
-    size_t notes_count;
-    char  *notes[MAX_STR_LEN];
+    uint64_t id;
+    char     descriptor[MAX_STR_LEN];
+    size_t   dlen;
+    char     username[MAX_STR_LEN];
+    size_t   ulen;
+    char     password[MAX_STR_LEN];
+    size_t   plen;
+    char     opt_secret[MAX_STR_LEN];
+    size_t   olen;
+    int      otp_base32;
+    size_t   ncount;
+    char     notes[5][MAX_STR_LEN];
 } table_entry_t;
 
 typedef unsigned int teid_t;
