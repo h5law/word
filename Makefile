@@ -33,11 +33,11 @@ build: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o words $(OBJECTS)
 
 $(TEST_DIR)/test_hotp.o:
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TEST_DIR)/test_hotp $(TEST_DIR)/test_hotp.c $(SRC_DIR)/hotp.c $(SRC_DIR)/totp.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TEST_DIR)/test_hotp.o $(TEST_DIR)/test_hotp.c $(SRC_DIR)/hotp.c $(SRC_DIR)/totp.c
 
 $(TEST_DIR)/test_totp.o:
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TEST_DIR)/test_totp $(TEST_DIR)/test_totp.c $(SRC_DIR)/hotp.c $(SRC_DIR)/totp.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TEST_DIR)/test_totp.o $(TEST_DIR)/test_totp.c $(SRC_DIR)/hotp.c $(SRC_DIR)/totp.c
 
 test: $(TEST_OBJECTS)
-	exec $(TEST_DIR)/test_hotp
-	exec $(TEST_DIR)/test_totp
+	exec $(TEST_DIR)/test_totp.o
+	exec $(TEST_DIR)/test_hotp.o
