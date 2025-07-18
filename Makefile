@@ -1,13 +1,14 @@
-CC = clang
+CC = gcc
 
-CFLAGS  = -Isrc/ \
- $(shell pkg-config --cflags openssl) \
- $(pkg-config --cflags limbo_sqlite3) \
- $(dialog-config --cflags)
+CFLAGS  := -Isrc/ \
+		   $(shell pkg-config --cflags openssl) \
+		   $(shell pkg-config --cflags limbo_sqlite3) \
+		   $(shell pkg-config --cflags ncurses)
 
-LDFLAGS  = $(shell pkg-config --libs openssl) \
- $(pkg-config --libs limbo_sqlite3) \
- $(dialog-config --libs)
+LDFLAGS := $(shell pkg-config --libs openssl) \
+		   $(shell pkg-config --libs limbo_sqlite3) \
+		   $(shell pkg-config --libs ncurses) \
+		   $(shell pkg-config --libs form)
 
 SRC_DIR = src
 TEST_DIR = tests
@@ -23,12 +24,13 @@ TEST_OBJECTS = $(TEST_SOURCES:.c=.o)
 clean:
 	rm -vf $(OBJECTS)
 	rm -vf $(TEST_OBJECTS)
+	rm -vf words
 
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 build: $(OBJECTS)
-	$(CC) $(CFLAGS) -o $(SRC_DIR)/words $(OBJECTS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o words $(OBJECTS)
 
 $(TEST_DIR)/test_hotp.o:
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TEST_DIR)/test_hotp $(TEST_DIR)/test_hotp.c $(SRC_DIR)/hotp.c $(SRC_DIR)/totp.c

@@ -1,3 +1,4 @@
 src/*.o
 tests/*.o
 .ccls-cache/*/**
+words
